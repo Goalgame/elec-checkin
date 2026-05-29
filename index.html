@@ -77,11 +77,10 @@
             }
         }
 
-        function saveDataAndSendFlex(lat, lon) {
+       function saveDataAndSendFlex(lat, lon) {
             document.getElementById('status-text').innerText = "กำลังบันทึกข้อมูล...";
             liff.getProfile().then(profile => {
                 
-                // ใช้ Fetch API ยิงข้อมูลไปที่ Google Apps Script โดยตรง
                 fetch(GAS_URL, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -96,45 +95,20 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.status === 'success') {
-                        document.getElementById('status-text').innerText = "สร้างสลิปยืนยัน...";
-                        sendFlexMessage(profile.displayName, data.date, data.time, actionType);
+                        document.getElementById('status-text').innerText = "บันทึกสำเร็จ!";
+                        // สั่งให้หน้าเว็บปิดตัวเอง หลังจากรอ 1.5 วินาที
+                        setTimeout(() => {
+                            liff.closeWindow(); 
+                        }, 1500);
                     } else {
                         showError("บันทึกไม่ได้: " + data.message);
                     }
                 })
                 .catch(error => showError("ระบบขัดข้อง: " + error));
-
             });
         }
 
-        function sendFlexMessage(name, date, time, actionStr) {
-            const flexMsg = {
-                "type": "flex", "altText": `ลงเวลา${actionStr}สำเร็จ`,
-                "contents": {
-                  "type": "bubble", "size": "kilo",
-                  "body": {
-                    "type": "box", "layout": "vertical",
-                    "contents": [
-                      { "type": "text", "text": "บันทึกเวลาเรียน", "weight": "bold", "size": "lg", "color": "#f97316" },
-                      { "type": "text", "text": `วันที่ ${date}`, "size": "xs", "color": "#94a3b8", "margin": "sm" },
-                      { "type": "separator", "margin": "md" },
-                      { "type": "text", "text": "แผนกวิชาอิเล็กทรอนิกส์", "margin": "md", "size": "sm", "color": "#475569", "weight": "bold" },
-                      { "type": "text", "text": `👨‍🎓 ${name}`, "weight": "bold", "size": "md", "color": "#1e293b", "margin": "md" },
-                      {
-                        "type": "box", "layout": "horizontal", "margin": "md",
-                        "contents": [
-                          { "type": "text", "text": `สถานะ: ${actionStr}`, "size": "sm", "color": "#64748b" },
-                          { "type": "text", "text": time, "size": "sm", "color": "#16a34a", "align": "end", "weight": "bold" }
-                        ]
-                      }
-                    ]
-                  }
-                }
-            };
-
-            liff.sendMessages([flexMsg]).then(() => liff.closeWindow()).catch(err => showError("ส่งสลิปไม่ได้"));
-        }
-
+       
         function calculateDistance(lat1, lon1, lat2, lon2) {
             var R = 6371e3, f1 = lat1 * Math.PI/180, f2 = lat2 * Math.PI/180, df = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
             var a = Math.sin(df/2) * Math.sin(df/2) + Math.cos(f1) * Math.cos(f2) * Math.sin(dl/2) * Math.sin(dl/2);
