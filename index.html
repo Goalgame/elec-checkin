@@ -96,7 +96,6 @@
         </div>
         <div class="form-group">
             <label>กลุ่มเรียน</label>
-            <!-- แก้ไข placeholder ตรงนี้แล้วครับ -->
             <input type="text" id="reg-group" class="form-control" placeholder="เช่น A1, B1, D1">
         </div>
         
@@ -104,10 +103,7 @@
     </div>
 
     <script>
-        // ==========================================
-        // ตั้งค่าตัวแปร
-        // ==========================================
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxmiiNvyZlvNDSx0NW5mHy0XJHne6288C6hYFk1npn9Mpax0UwUGVZ4K3F30JLR9dicdA/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUFHK2sRZ6ckOC1V5_NhdGLwuEhSnffQdLFV33LhGn8H0_wG_yz9bknNXPe4vMnYnwUQ/exec"; 
         const LIFF_ID = "2010231682-1cf9vjea"; 
         const TARGET_LAT = 15.8141829; 
         const TARGET_LON = 102.0134325; 
@@ -230,7 +226,9 @@
                 if (result.status === 'success') {
                     document.getElementById('status-text').innerText = "บันทึกสำเร็จ!";
                     document.getElementById('sub-status').innerText = "กำลังส่งสลิปยืนยัน...";
-                    sendFlexMessage(result.realName, result.stdId, result.date, result.time, actionType);
+                    // ตรวจสอบว่ามีตัวแปร group ส่งมาไหม ถ้าไม่มีให้เป็น -
+                    const stdGroup = result.group || "-"; 
+                    sendFlexMessage(result.realName, result.stdId, stdGroup, result.date, result.time, actionType);
                 } else {
                     showError("บันทึกไม่สำเร็จ: " + result.message);
                 }
@@ -238,30 +236,200 @@
             .catch(err => showError("ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " + err));
         }
 
-        function sendFlexMessage(realName, studentId, date, time, actionStr) {
+        // ==========================================
+        // ปรับแก้หน้าตา Flex Message (สลิป) ใหม่
+        // ==========================================
+        function sendFlexMessage(realName, studentId, stdGroup, date, time, actionStr) {
+            // เลือกสีแถบคาดด้านบน (เข้า=ส้ม, กลับ=น้ำเงิน)
+            const headerColor = actionStr === 'เข้าเรียน' ? "#f97316" : "#3b82f6";
+            const iconUrl = actionStr === 'เข้าเรียน' ? "https://cdn-icons-png.flaticon.com/512/815/815454.png" : "https://cdn-icons-png.flaticon.com/512/3580/3580168.png";
+
             const flexMsg = {
                 "type": "flex",
-                "altText": `นักเรียนลงเวลา${actionStr}สำเร็จ`,
+                "altText": `ระบบเช็คชื่อ: คุณลงเวลา${actionStr}สำเร็จ`,
                 "contents": {
                   "type": "bubble",
-                  "size": "kilo",
-                  "body": {
-                    "type": "box", "layout": "vertical",
+                  "size": "mega",
+                  "header": {
+                    "type": "box",
+                    "layout": "vertical",
                     "contents": [
-                      { "type": "text", "text": "บันทึกเวลาเรียน", "weight": "bold", "size": "lg", "color": "#f97316" },
-                      { "type": "text", "text": `วันที่ ${date}`, "size": "xs", "color": "#94a3b8", "margin": "sm" },
-                      { "type": "separator", "margin": "md" },
-                      { "type": "text", "text": "แผนกวิชาอิเล็กทรอนิกส์", "margin": "md", "size": "sm", "color": "#475569", "weight": "bold" },
-                      { "type": "text", "text": `👨‍🎓 ${realName}`, "weight": "bold", "size": "md", "color": "#1e293b", "margin": "md", "wrap": true },
-                      { "type": "text", "text": `รหัส: ${studentId}`, "size": "xs", "color": "#64748b", "margin": "none" },
                       {
-                        "type": "box", "layout": "horizontal", "margin": "md",
+                        "type": "box",
+                        "layout": "horizontal",
                         "contents": [
-                          { "type": "text", "text": `สถานะ: ${actionStr}`, "size": "sm", "color": "#64748b" },
-                          { "type": "text", "text": time, "size": "sm", "color": "#16a34a", "align": "end", "weight": "bold" }
+                          {
+                            "type": "image",
+                            "url": iconUrl,
+                            "size": "sm",
+                            "flex": 1
+                          },
+                          {
+                            "type": "text",
+                            "text": `ทำรายการ${actionStr}`,
+                            "weight": "bold",
+                            "color": "#ffffff",
+                            "size": "xl",
+                            "flex": 4,
+                            "gravity": "center",
+                            "align": "center"
+                          }
+                        ]
+                      }
+                    ],
+                    "backgroundColor": headerColor,
+                    "paddingTop": "19px",
+                    "paddingAll": "12px",
+                    "paddingBottom": "16px"
+                  },
+                  "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": "E-Slip การลงเวลาปฏิบัติงาน",
+                        "weight": "bold",
+                        "size": "md",
+                        "color": "#1e293b",
+                        "align": "center"
+                      },
+                      {
+                        "type": "text",
+                        "text": "แผนกวิชาอิเล็กทรอนิกส์",
+                        "size": "xs",
+                        "color": "#64748b",
+                        "align": "center",
+                        "margin": "sm"
+                      },
+                      {
+                        "type": "separator",
+                        "margin": "lg",
+                        "color": "#e2e8f0",
+                        "style": "dashed"
+                      },
+                      {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "lg",
+                        "spacing": "sm",
+                        "contents": [
+                          {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "contents": [
+                              {
+                                "type": "text",
+                                "text": "รหัสนักศึกษา",
+                                "size": "sm",
+                                "color": "#64748b"
+                              },
+                              {
+                                "type": "text",
+                                "text": studentId,
+                                "size": "sm",
+                                "color": "#1e293b",
+                                "align": "end",
+                                "weight": "bold"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "contents": [
+                              {
+                                "type": "text",
+                                "text": "ชื่อ-สกุล",
+                                "size": "sm",
+                                "color": "#64748b"
+                              },
+                              {
+                                "type": "text",
+                                "text": realName,
+                                "size": "sm",
+                                "color": "#1e293b",
+                                "align": "end",
+                                "weight": "bold",
+                                "wrap": true
+                              }
+                            ]
+                          },
+                          {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "contents": [
+                              {
+                                "type": "text",
+                                "text": "กลุ่มเรียน",
+                                "size": "sm",
+                                "color": "#64748b"
+                              },
+                              {
+                                "type": "text",
+                                "text": stdGroup || "-",
+                                "size": "sm",
+                                "color": "#1e293b",
+                                "align": "end",
+                                "weight": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "separator",
+                        "margin": "lg",
+                        "color": "#e2e8f0",
+                        "style": "dashed"
+                      },
+                      {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "margin": "lg",
+                        "contents": [
+                          {
+                            "type": "text",
+                            "text": "วันที่",
+                            "size": "sm",
+                            "color": "#64748b"
+                          },
+                          {
+                            "type": "text",
+                            "text": date,
+                            "size": "sm",
+                            "color": "#1e293b",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "margin": "md",
+                        "contents": [
+                          {
+                            "type": "text",
+                            "text": "เวลาลงบันทึก",
+                            "size": "sm",
+                            "color": "#64748b"
+                          },
+                          {
+                            "type": "text",
+                            "text": time,
+                            "size": "xl",
+                            "color": "#16a34a",
+                            "align": "end",
+                            "weight": "bold"
+                          }
                         ]
                       }
                     ]
+                  },
+                  "styles": {
+                    "footer": {
+                      "separator": true
+                    }
                   }
                 }
             };
