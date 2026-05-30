@@ -77,14 +77,12 @@
     <div class="dept-name">แผนกวิชาอิเล็กทรอนิกส์</div>
     <div class="sub-name">Electronics Department</div>
 
-    <!-- ส่วนที่ 1: หน้าจอโหลดและเช็คพิกัด -->
     <div id="loading-view" class="box-container loading-box">
         <div class="spinner"></div>
         <div id="status-text">กำลังตรวจสอบข้อมูลผู้ใช้...</div>
         <div id="sub-status">กรุณารอสักครู่</div>
     </div>
 
-    <!-- ส่วนที่ 2: หน้าจอลงทะเบียน (ซ่อนไว้ตอนแรก) -->
     <div id="register-view" class="box-container register-box">
         <div class="register-title">📝 ลงทะเบียนใช้งานครั้งแรก</div>
         
@@ -96,10 +94,10 @@
             <label>ชื่อ - นามสกุล</label>
             <input type="text" id="reg-name" class="form-control" placeholder="เช่น นายเรียนดี ขยันยิ่ง">
         </div>
-        <!-- เอาช่องระดับชั้นออกแล้ว -->
         <div class="form-group">
             <label>กลุ่มเรียน</label>
-            <input type="text" id="reg-group" class="form-control" placeholder="เช่น อิเล็กทรอนิกส์ 1">
+            <!-- แก้ไข placeholder ตรงนี้แล้วครับ -->
+            <input type="text" id="reg-group" class="form-control" placeholder="เช่น A1, B1, D1">
         </div>
         
         <button class="btn-submit" onclick="submitRegistration()">บันทึกข้อมูล</button>
@@ -109,18 +107,16 @@
         // ==========================================
         // ตั้งค่าตัวแปร
         // ==========================================
-        // ** นำ URL Web App ของ Google Apps Script มาใส่ที่นี่ !! **
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxmiiNvyZlvNDSx0NW5mHy0XJHne6288C6hYFk1npn9Mpax0UwUGVZ4K3F30JLR9dicdA/exec"; 
-        
         const LIFF_ID = "2010231682-1cf9vjea"; 
-        const TARGET_LAT = 15.8141829; // ละติจูดตึก
-        const TARGET_LON = 102.0134325; // ลองจิจูดตึก
+        const TARGET_LAT = 15.8141829; 
+        const TARGET_LON = 102.0134325; 
         const MAX_DISTANCE = 200; 
 
         const urlParams = new URLSearchParams(window.location.search);
         const actionType = urlParams.get('action') === 'out' ? 'กลับบ้าน' : 'เข้าเรียน';
         
-        let currentUserProfile = null; // เก็บข้อมูลผู้ใช้ LIFF
+        let currentUserProfile = null; 
 
         window.onload = function() {
             document.getElementById('page-title').innerHTML = `ระบบเช็คชื่อ <span>${actionType}</span>`;
@@ -134,7 +130,7 @@
                 } else {
                     liff.getProfile().then(profile => {
                         currentUserProfile = profile;
-                        checkUserRegistration(profile.userId); // เช็คว่าเคยลงทะเบียนไหม
+                        checkUserRegistration(profile.userId); 
                     });
                 }
             }).catch(err => {
@@ -142,7 +138,6 @@
             });
         }
 
-        // --- 1. ตรวจสอบการลงทะเบียน ---
         function checkUserRegistration(userId) {
             fetch(GAS_URL, {
                 method: 'POST',
@@ -151,18 +146,15 @@
             .then(res => res.json())
             .then(result => {
                 if(result.registered) {
-                    // เคยลงทะเบียนแล้ว -> ไปเช็คพิกัดเลย
                     document.getElementById('status-text').innerText = "ค้นหาตำแหน่ง GPS...";
                     getLocation();
                 } else {
-                    // ยังไม่เคยลงทะเบียน -> โชว์ฟอร์ม
                     document.getElementById('loading-view').style.display = 'none';
                     document.getElementById('register-view').style.display = 'block';
                 }
             }).catch(err => showError("เชื่อมต่อฐานข้อมูลล้มเหลว"));
         }
 
-        // --- 2. ฟังก์ชันกดปุ่มลงทะเบียน ---
         function submitRegistration() {
             const sid = document.getElementById('reg-sid').value.trim();
             const name = document.getElementById('reg-name').value.trim();
@@ -173,7 +165,6 @@
                 return;
             }
 
-            // ซ่อนฟอร์ม โชว์โหลด
             document.getElementById('register-view').style.display = 'none';
             document.getElementById('loading-view').style.display = 'block';
             document.getElementById('status-text').innerText = "กำลังบันทึกประวัติ...";
@@ -185,14 +176,12 @@
                     userId: currentUserProfile.userId,
                     studentId: sid,
                     name: name,
-                    // ไม่ส่ง level ไปแล้ว
                     group: group
                 })
             })
             .then(res => res.json())
             .then(result => {
                 if(result.status === 'success') {
-                    // ลงทะเบียนเสร็จ ไปเช็คพิกัดต่อเลย
                     document.getElementById('status-text').innerText = "ลงทะเบียนสำเร็จ! ค้นหาตำแหน่ง...";
                     getLocation();
                 } else {
@@ -201,7 +190,6 @@
             });
         }
 
-        // --- 3. เช็คพิกัด GPS ---
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -225,7 +213,6 @@
             }
         }
 
-        // --- 4. บันทึกเช็คชื่อ ---
         function saveCheckIn(lat, lon) {
             fetch(GAS_URL, {
                 method: 'POST',
@@ -243,7 +230,6 @@
                 if (result.status === 'success') {
                     document.getElementById('status-text').innerText = "บันทึกสำเร็จ!";
                     document.getElementById('sub-status').innerText = "กำลังส่งสลิปยืนยัน...";
-                    // ส่งชื่อจริงและรหัสที่ดึงมาจากฐานข้อมูลไปทำสลิป
                     sendFlexMessage(result.realName, result.stdId, result.date, result.time, actionType);
                 } else {
                     showError("บันทึกไม่สำเร็จ: " + result.message);
@@ -252,7 +238,6 @@
             .catch(err => showError("ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " + err));
         }
 
-        // --- 5. ส่งสลิป ---
         function sendFlexMessage(realName, studentId, date, time, actionStr) {
             const flexMsg = {
                 "type": "flex",
