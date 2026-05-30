@@ -83,35 +83,53 @@
             );
         }
 
-        function saveToServer(lat, lon) {
-            document.getElementById('status-text').innerText = "กำลังบันทึกข้อมูล...";
+       function saveToServer(lat, lon) {
+    document.getElementById('status-text').innerText = "กำลังบันทึกข้อมูล...";
+    document.getElementById('spinner').style.display = 'block';
 
-            liff.getProfile().then(profile => {
-                fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'saveData',
-                        userId: profile.userId,
-                        displayName: profile.displayName,
-                        action: actionType,
-                        lat: lat,
-                        lon: lon
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        document.getElementById('spinner').style.display = 'none';
-                        document.getElementById('status-text').innerText = `บันทึกสำเร็จ! (${data.time})`;
-                        setTimeout(() => liff.closeWindow(), 1600);
-                    } else {
-                        showError("บันทึกไม่สำเร็จ: " + data.message);
-                    }
-                })
-                .catch(err => showError("เกิดข้อผิดพลาด: " + err.message));
-            });
-        }
+    liff.getProfile().then(profile => {
+        fetch(GAS_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: 'saveData',
+                userId: profile.userId,
+                displayName: profile.displayName,
+                action: actionType,
+                lat: lat,
+                lon: lon
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Server error: " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('spinner').style.display = 'none';
+
+            if (data.status === 'success') {
+                document.getElementById('status-text').innerText = `บันทึกสำเร็จ! (${data.time})`;
+                setTimeout(() => {
+                    liff.closeWindow();
+                }, 1500);
+            } else {
+                showError("บันทึกไม่สำเร็จ: " + (data.message || "Unknown error"));
+            }
+        })
+        .catch(error => {
+            document.getElementById('spinner').style.display = 'none';
+            showError("Failed to Fetch: " + error.message);
+            console.error("Fetch Error:", error);
+        });
+    }).catch(err => {
+        document.getElementById('spinner').style.display = 'none';
+        showError("ไม่สามารถดึงข้อมูลโปรไฟล์ LINE ได้");
+    });
+}
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
