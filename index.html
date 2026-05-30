@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>บันทึกเวลา แผนกอิเล็กทรอนิกส์</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
@@ -14,75 +14,115 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            padding-top: 50px;
+            padding: 30px 0;
         }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h2 { color: #1e293b; display: inline; }
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h2 { color: #1e293b; display: inline; font-size: 24px; }
         .header h2 span { color: #f97316; } 
-        .icon { font-size: 60px; margin: 10px 0; }
-        .dept-name { color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 5px; text-align: center;}
-        .sub-name { color: #64748b; font-size: 14px; margin-bottom: 25px; text-align: center; }
+        .icon { font-size: 50px; margin: 5px 0; text-align: center; }
+        .dept-name { color: #0f172a; font-size: 18px; font-weight: bold; margin-bottom: 2px; text-align: center;}
+        .sub-name { color: #64748b; font-size: 12px; margin-bottom: 20px; text-align: center; }
         
-        .loading-box {
+        .box-container {
             background: white;
-            padding: 40px;
+            padding: 30px;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            text-align: center;
             width: 85%;
             max-width: 320px;
         }
+        /* Loading Box */
+        .loading-box { text-align: center; }
         .spinner {
-            border: 6px solid #f1f5f9;
-            border-top: 6px solid #f97316;
+            border: 5px solid #f1f5f9;
+            border-top: 5px solid #f97316;
             border-radius: 50%;
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 15px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #status-text { font-size: 16px; color: #334155; font-weight: bold; }
         #sub-status { font-size: 12px; color: #94a3b8; margin-top: 8px;}
+        
+        /* Register Box */
+        .register-box { display: none; }
+        .register-title { color: #1e293b; font-size: 16px; font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; color: #475569; margin-bottom: 5px; font-weight: bold; }
+        .form-control {
+            width: 100%; box-sizing: border-box; padding: 10px;
+            border: 1px solid #cbd5e1; border-radius: 6px;
+            font-family: 'Sarabun', sans-serif; font-size: 14px;
+        }
+        .form-control:focus { outline: none; border-color: #f97316; }
+        .btn-submit {
+            background-color: #f97316; color: white; width: 100%;
+            border: none; padding: 12px; border-radius: 6px;
+            font-size: 16px; font-weight: bold; font-family: 'Sarabun', sans-serif;
+            cursor: pointer; margin-top: 10px;
+        }
+        .btn-submit:active { background-color: #ea580c; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 id="page-title">ระบบเช็คชื่อ <span>เข้าเรียน</span></h2>
+        <h2 id="page-title">ระบบเช็คชื่อ <span>...</span></h2>
     </div>
-    
     <div class="icon">🔌</div>
-    
     <div class="dept-name">แผนกวิชาอิเล็กทรอนิกส์</div>
     <div class="sub-name">Electronics Department</div>
 
-    <div class="loading-box">
+    <!-- ส่วนที่ 1: หน้าจอโหลดและเช็คพิกัด -->
+    <div id="loading-view" class="box-container loading-box">
         <div class="spinner"></div>
-        <div id="status-text">กำลังตรวจสอบพิกัด...</div>
+        <div id="status-text">กำลังตรวจสอบข้อมูลผู้ใช้...</div>
         <div id="sub-status">กรุณารอสักครู่</div>
+    </div>
+
+    <!-- ส่วนที่ 2: หน้าจอลงทะเบียน (ซ่อนไว้ตอนแรก) -->
+    <div id="register-view" class="box-container register-box">
+        <div class="register-title">📝 ลงทะเบียนใช้งานครั้งแรก</div>
+        
+        <div class="form-group">
+            <label>รหัสนักศึกษา</label>
+            <input type="number" id="reg-sid" class="form-control" placeholder="เช่น 6620101001">
+        </div>
+        <div class="form-group">
+            <label>ชื่อ - นามสกุล</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="เช่น นายเรียนดี ขยันยิ่ง">
+        </div>
+        <!-- เอาช่องระดับชั้นออกแล้ว -->
+        <div class="form-group">
+            <label>กลุ่มเรียน</label>
+            <input type="text" id="reg-group" class="form-control" placeholder="เช่น อิเล็กทรอนิกส์ 1">
+        </div>
+        
+        <button class="btn-submit" onclick="submitRegistration()">บันทึกข้อมูล</button>
     </div>
 
     <script>
         // ==========================================
-        // 1. ตั้งค่า URL และพิกัด 
+        // ตั้งค่าตัวแปร
         // ==========================================
-        // ** นำ URL Web App ของ Google Apps Script มาใส่ตรงนี้ **
+        // ** นำ URL Web App ของ Google Apps Script มาใส่ที่นี่ !! **
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxmiiNvyZlvNDSx0NW5mHy0XJHne6288C6hYFk1npn9Mpax0UwUGVZ4K3F30JLR9dicdA/exec"; 
         
         const LIFF_ID = "2010231682-1cf9vjea"; 
-        const TARGET_LAT = 15.8141829; // ละติจูดอาคาร
-        const TARGET_LON = 102.0134325; // ลองจิจูดอาคาร
-        const MAX_DISTANCE = 500; 
+        const TARGET_LAT = 15.8141829; // ละติจูดตึก
+        const TARGET_LON = 102.0134325; // ลองจิจูดตึก
+        const MAX_DISTANCE = 200; 
 
-        // 2. อ่านค่าจาก URL ของ LIFF (แยกเข้าเรียน/กลับบ้าน)
         const urlParams = new URLSearchParams(window.location.search);
         const actionType = urlParams.get('action') === 'out' ? 'กลับบ้าน' : 'เข้าเรียน';
+        
+        let currentUserProfile = null; // เก็บข้อมูลผู้ใช้ LIFF
 
         window.onload = function() {
-            // ปรับหัวข้อตาม action
             document.getElementById('page-title').innerHTML = `ระบบเช็คชื่อ <span>${actionType}</span>`;
             initializeLiff();
         };
@@ -92,14 +132,76 @@
                 if (!liff.isLoggedIn()) {
                     liff.login({ redirectUri: window.location.href });
                 } else {
-                    document.getElementById('status-text').innerText = "ค้นหาตำแหน่ง GPS...";
-                    getLocation();
+                    liff.getProfile().then(profile => {
+                        currentUserProfile = profile;
+                        checkUserRegistration(profile.userId); // เช็คว่าเคยลงทะเบียนไหม
+                    });
                 }
             }).catch(err => {
                 showError("Error LIFF: " + err);
             });
         }
 
+        // --- 1. ตรวจสอบการลงทะเบียน ---
+        function checkUserRegistration(userId) {
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ type: 'check_user', userId: userId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if(result.registered) {
+                    // เคยลงทะเบียนแล้ว -> ไปเช็คพิกัดเลย
+                    document.getElementById('status-text').innerText = "ค้นหาตำแหน่ง GPS...";
+                    getLocation();
+                } else {
+                    // ยังไม่เคยลงทะเบียน -> โชว์ฟอร์ม
+                    document.getElementById('loading-view').style.display = 'none';
+                    document.getElementById('register-view').style.display = 'block';
+                }
+            }).catch(err => showError("เชื่อมต่อฐานข้อมูลล้มเหลว"));
+        }
+
+        // --- 2. ฟังก์ชันกดปุ่มลงทะเบียน ---
+        function submitRegistration() {
+            const sid = document.getElementById('reg-sid').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const group = document.getElementById('reg-group').value.trim();
+
+            if(!sid || !name || !group) {
+                alert("กรุณากรอกข้อมูลให้ครบทุกช่องครับ");
+                return;
+            }
+
+            // ซ่อนฟอร์ม โชว์โหลด
+            document.getElementById('register-view').style.display = 'none';
+            document.getElementById('loading-view').style.display = 'block';
+            document.getElementById('status-text').innerText = "กำลังบันทึกประวัติ...";
+
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    type: 'register_user', 
+                    userId: currentUserProfile.userId,
+                    studentId: sid,
+                    name: name,
+                    // ไม่ส่ง level ไปแล้ว
+                    group: group
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if(result.status === 'success') {
+                    // ลงทะเบียนเสร็จ ไปเช็คพิกัดต่อเลย
+                    document.getElementById('status-text').innerText = "ลงทะเบียนสำเร็จ! ค้นหาตำแหน่ง...";
+                    getLocation();
+                } else {
+                    showError("ลงทะเบียนล้มเหลว: " + result.message);
+                }
+            });
+        }
+
+        // --- 3. เช็คพิกัด GPS ---
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -109,15 +211,13 @@
                         let distance = calculateDistance(userLat, userLon, TARGET_LAT, TARGET_LON);
                         
                         if (distance <= MAX_DISTANCE) {
-                            document.getElementById('status-text').innerText = "กำลังบันทึกข้อมูล...";
-                            saveDataAndSendFlex(userLat, userLon);
+                            document.getElementById('status-text').innerText = "กำลังบันทึกการเข้าเรียน...";
+                            saveCheckIn(userLat, userLon);
                         } else {
                             showError(`คุณไม่ได้อยู่ที่อาคารเรียน\n(ห่าง ${distance.toFixed(0)} เมตร)`);
                         }
                     },
-                    (error) => {
-                        showError("กรุณาเปิด GPS และอนุญาตการเข้าถึง");
-                    },
+                    (error) => showError("กรุณาเปิด GPS และอนุญาตการเข้าถึง"),
                     { enableHighAccuracy: true }
                 );
             } else {
@@ -125,40 +225,35 @@
             }
         }
 
-        function saveDataAndSendFlex(lat, lon) {
-            liff.getProfile().then(profile => {
-                // แพ็กข้อมูลเตรียมส่งไปหา Google Apps Script
-                const payload = {
+        // --- 4. บันทึกเช็คชื่อ ---
+        function saveCheckIn(lat, lon) {
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
                     type: 'liff_submit',
-                    userId: profile.userId,
-                    displayName: profile.displayName,
+                    userId: currentUserProfile.userId,
+                    displayName: currentUserProfile.displayName,
                     action: actionType,
                     lat: lat,
                     lon: lon
-                };
-
-                // ส่งข้อมูลด้วย fetch แทน google.script.run
-                fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload) // ส่งแบบ text/plain ป้องกัน CORS Error
                 })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === 'success') {
-                        document.getElementById('status-text').innerText = "บันทึกสำเร็จ!";
-                        document.getElementById('sub-status').innerText = "กำลังสร้างสลิปยืนยัน...";
-                        sendFlexMessage(profile.displayName, result.date, result.time, actionType);
-                    } else {
-                        showError("บันทึกไม่สำเร็จ: " + result.message);
-                    }
-                })
-                .catch(err => {
-                    showError("ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " + err);
-                });
-            });
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    document.getElementById('status-text').innerText = "บันทึกสำเร็จ!";
+                    document.getElementById('sub-status').innerText = "กำลังส่งสลิปยืนยัน...";
+                    // ส่งชื่อจริงและรหัสที่ดึงมาจากฐานข้อมูลไปทำสลิป
+                    sendFlexMessage(result.realName, result.stdId, result.date, result.time, actionType);
+                } else {
+                    showError("บันทึกไม่สำเร็จ: " + result.message);
+                }
+            })
+            .catch(err => showError("ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " + err));
         }
 
-        function sendFlexMessage(name, date, time, actionStr) {
+        // --- 5. ส่งสลิป ---
+        function sendFlexMessage(realName, studentId, date, time, actionStr) {
             const flexMsg = {
                 "type": "flex",
                 "altText": `นักเรียนลงเวลา${actionStr}สำเร็จ`,
@@ -166,62 +261,19 @@
                   "type": "bubble",
                   "size": "kilo",
                   "body": {
-                    "type": "box",
-                    "layout": "vertical",
+                    "type": "box", "layout": "vertical",
                     "contents": [
+                      { "type": "text", "text": "บันทึกเวลาเรียน", "weight": "bold", "size": "lg", "color": "#f97316" },
+                      { "type": "text", "text": `วันที่ ${date}`, "size": "xs", "color": "#94a3b8", "margin": "sm" },
+                      { "type": "separator", "margin": "md" },
+                      { "type": "text", "text": "แผนกวิชาอิเล็กทรอนิกส์", "margin": "md", "size": "sm", "color": "#475569", "weight": "bold" },
+                      { "type": "text", "text": `👨‍🎓 ${realName}`, "weight": "bold", "size": "md", "color": "#1e293b", "margin": "md", "wrap": true },
+                      { "type": "text", "text": `รหัส: ${studentId}`, "size": "xs", "color": "#64748b", "margin": "none" },
                       {
-                        "type": "text",
-                        "text": "บันทึกเวลาเรียน",
-                        "weight": "bold",
-                        "size": "lg",
-                        "color": "#f97316"
-                      },
-                      {
-                        "type": "text",
-                        "text": `วันที่ ${date}`,
-                        "size": "xs",
-                        "color": "#94a3b8",
-                        "margin": "sm"
-                      },
-                      {
-                        "type": "separator",
-                        "margin": "md"
-                      },
-                      {
-                        "type": "text",
-                        "text": "แผนกวิชาอิเล็กทรอนิกส์",
-                        "margin": "md",
-                        "size": "sm",
-                        "color": "#475569",
-                        "weight": "bold"
-                      },
-                      {
-                        "type": "text",
-                        "text": `👨‍🎓 ${name}`,
-                        "weight": "bold",
-                        "size": "md",
-                        "color": "#1e293b",
-                        "margin": "md"
-                      },
-                      {
-                        "type": "box",
-                        "layout": "horizontal",
-                        "margin": "md",
+                        "type": "box", "layout": "horizontal", "margin": "md",
                         "contents": [
-                          {
-                            "type": "text",
-                            "text": `สถานะ: ${actionStr}`,
-                            "size": "sm",
-                            "color": "#64748b"
-                          },
-                          {
-                            "type": "text",
-                            "text": time,
-                            "size": "sm",
-                            "color": "#16a34a",
-                            "align": "end",
-                            "weight": "bold"
-                          }
+                          { "type": "text", "text": `สถานะ: ${actionStr}`, "size": "sm", "color": "#64748b" },
+                          { "type": "text", "text": time, "size": "sm", "color": "#16a34a", "align": "end", "weight": "bold" }
                         ]
                       }
                     ]
@@ -231,9 +283,7 @@
 
             liff.sendMessages([flexMsg]).then(() => {
                 liff.closeWindow(); 
-            }).catch(err => {
-                showError("ส่งข้อความไม่ได้: " + err);
-            });
+            }).catch(err => showError("ส่งข้อความไม่ได้: " + err));
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -242,10 +292,8 @@
             var f2 = lat2 * Math.PI/180;
             var df = (lat2-lat1) * Math.PI/180;
             var dl = (lon2-lon1) * Math.PI/180;
-
             var a = Math.sin(df/2) * Math.sin(df/2) + Math.cos(f1) * Math.cos(f2) * Math.sin(dl/2) * Math.sin(dl/2);
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; 
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
         }
 
         function showError(msg) {
